@@ -1,15 +1,14 @@
 import React,{useEffect, useState} from "react";
 //import JobData from "../Data/JobsDataAvl";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from '../../api';
 function Job() {
-      const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("Big Brands");
   const [JobData ,setJobData]=useState([])
   useEffect(()=>{
     const fetchData=async()=>{
       try{
-        const response=await axios.get(`/api/job`)
+        const response=await api.get(`/api/job`)
         setJobData(response.data)
       }catch(error){
         console.log(error)
@@ -21,11 +20,6 @@ function Job() {
   const handleSlideJob = (direction) => {
     const contianer = document.getElementById("container3");
     const step = 100;
-    if (direction === "left") {
-      setCurrentSlide((preveSlibe) => (preveSlibe > 0 ? preveSlibe - 1 : 0));
-    } else {
-      setCurrentSlide((preveSlibe) => (preveSlibe < 3 ? preveSlibe + 1 : 3));
-    }
     sideScrollJob(contianer, direction, 25, step, 10);
   };
   const filterJobs = JobData.filter(

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../api';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ function Postinternships() {
     const [title, setTitle] = useState('');
     const [companyName, setCompanyName] = useState('');
     const [location, setLocation] = useState('');
+    const [duration, setDuration] = useState('');
     const [category, setCategory] = useState('');
     const [aboutCompany, setAboutCompany] = useState('');
     const [aboutInternship, setAboutInternship] = useState('');
@@ -22,6 +23,7 @@ function Postinternships() {
         title,
         companyName,
         location,
+        duration,
         category,
         aboutCompany,
         aboutInternship,
@@ -42,6 +44,7 @@ function Postinternships() {
           title:title,
           company:companyName,
           location:location,
+          Duration:duration,
           category:category,
           aboutCompany:aboutCompany,
           aboutInternship:aboutInternship,
@@ -55,7 +58,7 @@ function Postinternships() {
       }
 
       try {
-        const res = await axios.post("/api/internship",bodyJosn)
+        const res = await api.post("/api/internship",bodyJosn)
         console.log(res.data)
         alert("Internship posted successfully")
         navigate("/adminpanel")
@@ -87,6 +90,10 @@ function Postinternships() {
       <div class="sm:col-span-2">
         <label for="Location" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">Location</label>
         <input name="Location" value={location} onChange={(e)=>setLocation(e.target.value)} class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+      </div>
+      <div class="sm:col-span-2">
+        <label for="duration" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">Duration*</label>
+        <input id="duration" name="duration" value={duration} onChange={(e)=>setDuration(e.target.value)} class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
       </div>
 
       <div class="sm:col-span-2">

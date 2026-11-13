@@ -1,33 +1,39 @@
 import React, { useEffect, useState } from 'react'
-import Intern from "../Data/InternshipDatAvl"
 import { Link, useNavigate } from 'react-router-dom';
 import { selectUser } from '../../Feature/Userslice';
 import {useSelector} from 'react-redux';
-import axios from 'axios';
+import api from '../../api';
 import "./detail.css"
 function InternDetail() {
   const user=useSelector(selectUser)
   const [isDivVisible,setDivVisible]=useState(false)
   const [textArea,setTextArea]=useState("");
-  const [company,setCompany]=useState("")
-  const [category ,setCategory]=useState("")
   const navigate=useNavigate()
   let search=window.location.search;
   const params=new URLSearchParams(search);
 const id=params.get("q")
 
 
-  const [data,setData]=useState([])
-  useEffect(()=>{
-    const fetchData=async()=>{
-      const response=await axios.get(`/api/internship/${id}`)
-      setData(response.data)
-      const {company,category}=response.data;
-      setCompany(company)
-      setCategory(category)
+  const [data,setData]=useState({})
+  const [loadError,setLoadError]=useState("")
+  const [isSubmitting,setIsSubmitting]=useState(false)
+  useEffect(() => {
+    if (!id) {
+      setLoadError("The listing ID is missing.");
+      return undefined;
     }
-    fetchData()
-  })
+    let active = true;
+    const fetchData = async () => {
+      try {
+        const response = await api.get(`/api/internship/${id}`);
+        if (active) setData(response.data);
+      } catch (error) {
+        if (active) setLoadError(error.response?.data?.error || "Unable to load this listing.");
+      }
+    };
+    fetchData();
+    return () => { active = false; };
+  }, [id]);
   const show=()=>{
     setDivVisible(true)
   }
@@ -35,29 +41,36 @@ const id=params.get("q")
     setDivVisible(false)
   }
 
-  const submitApplication=async()=>{
-    const text=document.getElementById("text");
-    if(text===" "){
-      alert("Fill the mandatory fields")
+  const submitApplication = async () => {
+    if (!user) {
+      navigate("/register");
+      return;
     }
-    else{
-      const bodyJson={
-        coverLetter:textArea,
-        category:category,
-        company:company,
-        user:user,
-        Application:id
-      }
-      await axios.post("/api/application",bodyJson).then((res)=>{
-        alert("Done")
-    navigate("/internships")
-      
-    }).catch((err)=>{
-      alert("error happend")
-    })
-    
+    if (!textArea.trim()) {
+      alert("Please enter a cover letter before submitting.");
+      return;
     }
-  }
+    setIsSubmitting(true);
+    try {
+      await api.post("/api/application", {
+        coverLetter: textArea,
+        listingId: id,
+        listingType: "internship",
+      });
+      alert("Application submitted successfully.");
+      setDivVisible(false);
+      setTextArea("");
+      navigate("/internships");
+    } catch (error) {
+      alert(error.response?.data?.error || "Unable to submit your application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loadError) return <div className="details-app"><p role="alert">{loadError}</p></div>;
+  if (!data._id) return <div className="details-app"><p>Loading listing details...</p></div>;
+
   return (
     <div>
       <div className='details-app'>
@@ -112,7 +125,7 @@ const id=params.get("q")
           <p>{data.Whocanapply}</p>
         </div>
         <p className='mt-3 text-xl font-bold text-start'>Perks</p>
-          <p>{data.perks}</p>
+          <p>{Array.isArray(data.perks) ? data.perks.join(", ") : data.perks}</p>
           
           <p className='mt-3 text-xl font-bold text-start'> Additional information</p>
           <p>{data.AdditionalInfo}</p>
@@ -203,7 +216,7 @@ const id=params.get("q")
  
       <div className="submit flex justify-center">
         {user?(
-    <button className='submit-btn' onClick={submitApplication} >Submit application</button>
+    <button className='submit-btn' onClick={submitApplication} disabled={isSubmitting}>{isSubmitting ? "Submitting..." : "Submit application"}</button>
         ):(
           <Link to={"/register"}>
           <button className='submit-btn'  >Submit application</button>

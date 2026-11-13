@@ -19,7 +19,8 @@
   margin: 0.75rem auto;
 }
 
-.footer .row a {
+.footer .row a,
+.footer .row span {
   color: #d8b4fe;
   text-decoration: none;
   transition: all 0.25s ease;
@@ -44,7 +45,8 @@
   margin: 0;
 }
 
-.footer .row a i {
+.footer .row a i,
+.footer .row span i {
   width: 40px;
   height: 40px;
   border-radius: 50%;

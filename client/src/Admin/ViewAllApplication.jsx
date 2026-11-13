@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../Feature/Userslice';
 import "./admin.css"
 
 function ViewAllApplication() {
-  const user=useSelector(selectUser)
   const [application,setApplication]=useState([]);
   useEffect(()=>{
     const fetchApplication=async()=>{
       try{
-        const response=await axios.get("/api/application")
+        const response=await api.get("/api/application")
         setApplication(response.data)
       }
       catch(error){
@@ -43,17 +40,17 @@ function ViewAllApplication() {
 <tbody>
     {
         application.map((data)=>(
-            <>
+            <React.Fragment key={data._id}>
     
             <tr className='border-b'>
             <td className='whitespace-nowrap px-6 py-4'>{data.company}</td>
             <td className='whitespace-nowrap px-6 py-4'>{data.category}</td>
             <td className='whitespace-nowrap px-6 py-4'>{new Date(data?.createAt).toLocaleDateString()}</td>
-            <td className='whitespace-nowrap px-6 py-4'>{data.user.name}</td>
+            <td className='whitespace-nowrap px-6 py-4'>{data.user?.name || "User"}</td>
             <td className='whitespace-nowrap px-6 py-4'><Link to={`/detailApplication?a=${data._id}`}><i class="bi bi-envelope-open text-blue-500"></i></Link></td>
             <td className='whitespace-nowrap px-6 py-4'>{data.status}</td>
             </tr>
-            </>
+            </React.Fragment>
         ))
     }
 </tbody>
@@ -79,7 +76,7 @@ function ViewAllApplication() {
            </div>
            <div class="flex-grow">
              <h2 class="text-gray-900 text-lg title-font font-medium mb-3"> company name {data.company}</h2>
-             <p class="leading-relaxed text-base"> Applied by  {data.user.name}</p>
+             <p class="leading-relaxed text-base"> Applied by  {data.user?.name || "User"}</p>
              <p class="leading-relaxed text-base"> Applied on  {new Date(data?.createAt).toLocaleDateString()}</p>
              <p class="leading-relaxed text-base"> Application status  {data.status}</p>
              <Link to={`/detailApplication?a=${data._id}`} class="mt-3 text-indigo-500 inline-flex items-center">View in detail

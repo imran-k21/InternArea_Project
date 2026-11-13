@@ -1,54 +1,66 @@
-const express =require("express")
-const router= express.Router();
-const Job=require("../Model/Jobs");
+const express = require("express");
+const mongoose = require("mongoose");
+const router = express.Router();
+const Job = require("../Model/Jobs");
+const { requireAdmin } = require("../Middleware/auth");
 
+function toPerks(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  return String(value || "").split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+}
 
-
-router.post("/",async (req,res)=>{
-    const JobData=new Job({
-        title: req.body.title,
-        company: req.body.company,
-        location: req.body.location,
-        Experience: req.body.experience,
-        category: req.body.category,
-        aboutCompany:req.body.aboutCompany,
-        aboutInternship:req.body.aboutInternship,
-        Whocanapply: req.body.Whocanapply,
-        perks: req.body.perks,
-        AdditionalInfo:req.body.AdditionalInfo,
-        CTC: req.body.ctc,
-        StartDate:req.body.StartDate,
-    })
-    await JobData.save().then((data)=>{
-        res.send(data)
-    }).catch((error)=>{
-        console.log(error,"not able to post the data")
-    })
-})
-
-router.get("/",async (req,res)=>{
-    try {
-        const data=await Job.find();
-        res.json(data) .status(200)
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({error:"Internal server error "})
+router.post("/", requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    if (!String(body.title || "").trim() || !String(body.company || "").trim()) {
+      return res.status(400).json({ error: "Job title and company are required" });
     }
-})
 
+    const job = await Job.create({
+      title: body.title,
+      company: body.company,
+      location: body.location,
+      Experience: body.Experience || body.experience,
+      category: body.category,
+      aboutCompany: body.aboutCompany,
+      aboutJob: body.aboutJob || body.aboutInternship,
+      Whocanapply: body.Whocanapply || body.whoCanApply,
+      perks: toPerks(body.perks),
+      numberOfopning: body.numberOfopning || body.numberOfOpening,
+      AdditionalInfo: body.AdditionalInfo || body.additionalInfo,
+      CTC: body.CTC || body.ctc,
+      StartDate: body.StartDate || body.startDate,
+    });
 
-router.get("/:id", async (req,res)=>{
-    const {id}=req.params;
-    try {
-        const data=await Job.findById(id);
-        if (!data) {
+    return res.status(201).json(job);
+  } catch (error) {
+    console.error("Unable to create job:", error);
+    return res.status(500).json({ error: "Unable to create job" });
+  }
+});
 
-             res.status(404).json({error:"Internship is not found "})
-        }
-        res.json(data) .status(200)
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({error:"Internal server error "})
-    }
-})
-module.exports=router
+router.get("/", async (req, res) => {
+  try {
+    const jobs = await Job.find().sort({ createAt: -1 });
+    return res.status(200).json(jobs);
+  } catch (error) {
+    console.error("Unable to fetch jobs:", error);
+    return res.status(500).json({ error: "Unable to fetch jobs" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ error: "Invalid job ID" });
+  }
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    return res.status(200).json(job);
+  } catch (error) {
+    console.error("Unable to fetch job:", error);
+    return res.status(500).json({ error: "Unable to fetch job" });
+  }
+});
+
+module.exports = router;

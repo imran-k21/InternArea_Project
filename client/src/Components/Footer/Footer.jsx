@@ -6,20 +6,20 @@ function Footer() {
         <footer>
 <div class="footer">
 <div class="row">
-<a href="#"><i class="fa fa-facebook"></i></a>
-<a href="#"><i class="fa fa-instagram"></i></a>
-<a href="#"><i class="fa fa-youtube"></i></a>
-<a href="#"><i class="fa fa-twitter"></i></a>
+<span aria-label="Facebook"><i class="fa fa-facebook"></i></span>
+<span aria-label="Instagram"><i class="fa fa-instagram"></i></span>
+<span aria-label="YouTube"><i class="fa fa-youtube"></i></span>
+<span aria-label="Twitter"><i class="fa fa-twitter"></i></span>
 
 </div>
 
 <div class="row services">
 <ul>
-<li><a href="#">Contact us</a></li>
-<li><a href="#">Our Services</a></li>
-<li><a href="#">Privacy Policy</a></li>
-<li><a href="#">Terms & Conditions</a></li>
-<li><a href="#">Career</a></li>
+<li><span>Contact us</span></li>
+<li><span>Our Services</span></li>
+<li><span>Privacy Policy</span></li>
+<li><span>Terms & Conditions</span></li>
+<li><span>Career</span></li>
 </ul>
 </div>
 

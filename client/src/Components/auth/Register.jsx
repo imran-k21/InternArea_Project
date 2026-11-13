@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
+import { useDispatch } from 'react-redux'
+import { login } from '../../Feature/Userslice'
+import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from 'firebase/auth'
 import './register.css'
 import {auth,provider} from "../../firebase/firebase"
 import { useNavigate } from 'react-router-dom'
@@ -12,17 +14,65 @@ function Register() {
   const [email,setEmail]=useState("")
   const [password,setPassword]=useState("")
   let navigate=useNavigate()
-  const handleSingin=()=>{
-    signInWithPopup(auth,provider).then((res)=>{
-      console.log(res)
-     
-      navigate("/")
-    
-  }).catch((err)=>{
-      console.log(err)
-  })
-  toast("Login Success")
-  }
+  const dispatch = useDispatch()
+  const handleSingin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      toast.success("Login successful");
+      navigate("/");
+    } catch (error) {
+      toast.error(error.message || "Google sign-in failed");
+    }
+  };
+
+  const handleEmailSignup = async () => {
+    if (!fname.trim() || !lname.trim() || !email.trim() || password.length < 6) {
+      toast.error("Enter your name, a valid email, and a password of at least 6 characters.");
+      return;
+    }
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await updateProfile(credential.user, { displayName: `${fname.trim()} ${lname.trim()}` });
+      dispatch(login({
+        uid: credential.user.uid,
+        photo: credential.user.photoURL || "",
+        name: credential.user.displayName,
+        email: credential.user.email || "",
+        phoneNumber: credential.user.phoneNumber || "",
+      }));
+      toast.success("Account created successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error(error.message || "Unable to create your account");
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      toast.error("Enter your email address first.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      toast.success("Password reset email sent.");
+    } catch (error) {
+      toast.error(error.message || "Unable to send password reset email");
+    }
+  };
+
+  const handleEmailLogin = async () => {
+    if (!email.trim() || !password) {
+      toast.error("Enter your email and password.");
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      toast.success("Login successful");
+      navigate("/");
+    } catch (error) {
+      toast.error(error.message || "Unable to log in");
+    }
+  };
   const setTrueForStudent=()=>{
     setStudent(false)
 }
@@ -44,7 +94,7 @@ const closeLogin=()=>{
         <div className="py-6">
           <div className="flex bg-white rounded-lg justify-center shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl">
 <div className="w-full p-8 lg:w-1/2">
-<a onClick={handleSingin} class="flex items-center h-9 justify-center mt-4 text-white rounded-lg shadow-md hover:bg-gray-100">
+<button type="button" onClick={handleSingin} className="flex items-center h-9 justify-center mt-4 text-white rounded-lg shadow-md hover:bg-gray-100 w-full">
                    <div class="px-4 py-3 cursor-pointer">
                        <svg class="h-6 w-6" viewBox="0 0 40 40">
                            <path d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.045 27.2142 24.3525 30 20 30C14.4775 30 10 25.5225 10 20C10 14.4775 14.4775 9.99999 20 9.99999C22.5492 9.99999 24.8683 10.9617 26.6342 12.5325L31.3483 7.81833C28.3717 5.04416 24.39 3.33333 20 3.33333C10.7958 3.33333 3.33335 10.7958 3.33335 20C3.33335 29.2042 10.7958 36.6667 20 36.6667C29.2042 36.6667 36.6667 29.2042 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z" fill="#FFC107"/>
@@ -55,7 +105,7 @@ const closeLogin=()=>{
                    </div>
                    <h1 class="cursor-pointer px-4 py-3 w-5/6 text-center text-xl text-gray-600 font-bold">Sign in with Google</h1>
       
-               </a>
+               </button>
                <div className="mt-4 flex items-center justify-between">
 <span className='border-b w-1/5 lg:w1/4'></span>
 <a href="/" className='text-xs text-center text-gray-500 uppercase'>or</a>
@@ -68,7 +118,7 @@ const closeLogin=()=>{
               </div> 
               <div className="mt-4">
                 <label htmlFor="password" className='border-b text-gray-700 text-sm font-bold mb-2'>Password</label>
-                <input type="text"  value={password} onChange={(e)=>setPassword(e.target.value)} className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='password' />
+                <input type="password"  value={password} onChange={(e)=>setPassword(e.target.value)} className='text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none' id='password' />
               </div> 
               <div className="mt-4 flex justify-between">
 <div>
@@ -82,7 +132,7 @@ const closeLogin=()=>{
               </div>
               <small>By signing up, you agree to our <span className='text-blue-400'>Term and Conditions.
                 </span></small>
-                <button className='bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600'>Sign Up </button>
+                <button type='button' onClick={handleEmailSignup} className='bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600'>Sign Up</button>
                 Already registered? <span className='text-blue-400 cursor-pointer' onClick={showLogin}>Login</span> 
 </div>
           </div>
@@ -131,17 +181,17 @@ const closeLogin=()=>{
  </div>
  <div class="mt-4">
                  <label class="block text-gray-700 text-sm font-bold mb-2">Email </label>
-                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none" type="email"  placeholder='john@example.com'/>
+                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder='john@example.com'/>
              </div>
              <div class="mt-4">
                  <div class="flex justify-between">
                      <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                     <a href="/" class="text-xs text-blue-500">Forget Password?</a>
+                     <button type="button" onClick={handlePasswordReset} className="text-xs text-blue-500">Forget Password?</button>
                  </div>
-                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"   placeholder='Must be atleast 6 characters'   type="password"/>
+                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"   placeholder='Must be atleast 6 characters' value={password} onChange={(e)=>setPassword(e.target.value)} type="password"/>
              </div>
              <div className="mt-8">
-             <button className='btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 '>Login</button>
+             <button type='button' onClick={handleEmailLogin} className='btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600'>Login</button>
              </div>
 
              <div className="mt-4 flex items-center justify-between">
@@ -158,17 +208,17 @@ const closeLogin=()=>{
 <div className="w-full p-8 lg:w-1/2">
                  <div class="mt-4">
                  <label class="block text-gray-700 text-sm font-bold mb-2">Email </label>
-                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none" type="email"  placeholder='john@example.com'/>
+                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder='john@example.com'/>
              </div>
              <div class="mt-4">
                  <div class="flex justify-between">
                      <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                     <a href="/" class="text-xs text-blue-500">Forget Password?</a>
+                     <button type="button" onClick={handlePasswordReset} className="text-xs text-blue-500">Forget Password?</button>
                  </div>
-                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"   placeholder='Must be atleast 6 characters'   type="password"/>
+                 <input class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"   placeholder='Must be atleast 6 characters' value={password} onChange={(e)=>setPassword(e.target.value)} type="password"/>
              </div>
              <div className="mt-8">
-             <button className='btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 '>Login</button>
+             <button type='button' onClick={handleEmailLogin} className='btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600'>Login</button>
              </div>
 
              <div className="mt-4 flex items-center justify-between">

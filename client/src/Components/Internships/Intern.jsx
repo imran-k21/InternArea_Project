@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import "./intern.css"
 
 import compLogo from "../../Assets/netflix.png"
-import axios from 'axios';
+import api from '../../api';
 import { Link, useLocation } from 'react-router-dom';
 function Intern() {
 
@@ -25,7 +25,7 @@ const location = useLocation();
   useEffect(()=>{
     const fetchData= async()=>{
         try {
-        const response= await axios.get(`/api/internship`)
+        const response= await api.get(`/api/internship`)
         setInternData(response.data)
         console.log(response.data)
     } catch (error) {
@@ -52,7 +52,7 @@ fetchData();
     setFilterInternship(InternData);
   };
 
-  const filterInterships = (category, location) => {
+  const filterInterships = useCallback((category, location) => {
     if (InternData && InternData.length > 0) {
       const categoryTerm = category.toLowerCase();
       const locationTerm = location.toLowerCase();
@@ -69,10 +69,10 @@ fetchData();
         setFilterInternship(filterData);
       
     }
-  };
+  }, [InternData]);
   useEffect(() => {
     filterInterships(serachCategory, searchLoaction);
-  }, [searchLoaction, serachCategory, InternData]);
+  }, [filterInterships, searchLoaction, serachCategory]);
 
   useEffect(() => {
     const query = new URLSearchParams(location.search).get("q") || "";

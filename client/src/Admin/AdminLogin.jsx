@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./admin.css";
@@ -12,17 +12,18 @@ function AdminLogin() {
       alert("Fill the Blanks")
     }
     else{
+      window.sessionStorage.removeItem("internarea_admin_token");
       const bodyjson={
             username:username,
             password:password
       }
-      axios.post("/api/admin/adminLogin",bodyjson).then((res)=>{
-            console.log(res,"data is sent")
-            alert("success")
-            navigate("/adminpanel");
-      }).catch((err)=>{
-            console.log(err)
-      })
+      try {
+        const response = await api.post("/api/admin/adminLogin", bodyjson);
+        window.sessionStorage.setItem("internarea_admin_token", response.data.token);
+        navigate("/adminpanel");
+      } catch (err) {
+        alert(err.response?.data?.error || "Admin login failed");
+      }
     }
   };
   return (

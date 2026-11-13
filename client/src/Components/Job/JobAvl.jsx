@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./job.css";
 // import JobData from "../Data/JobsDataAvl";
 import compLogo from "../../Assets/netflix.png";
 import { Link, useLocation } from "react-router-dom";
-import axios from "axios";
+import api from '../../api';
 
 function JobAvl() {
   const [serachCategory, setSearchCategory] = useState("");
@@ -36,7 +36,7 @@ function JobAvl() {
   useEffect(()=>{
     const fetchData=async()=>{
       try{
-        const response=await axios.get(`/api/job`)
+        const response=await api.get(`/api/job`)
         setJobData(response.data)
       }catch(error){
         console.log(error)
@@ -45,7 +45,7 @@ function JobAvl() {
     fetchData()
    },[])
 
-  const filterJobs = (category, location) => {
+  const filterJobs = useCallback((category, location) => {
     const filterData = JobData.filter(
       (Job) =>
         (
@@ -56,10 +56,10 @@ function JobAvl() {
         Job.location?.toLowerCase().includes(location.toLowerCase())
     );
     setFilterJob(filterData);
-  };
+  }, [JobData]);
   useEffect(() => {
     filterJobs(serachCategory, searchLoaction);
-  }, [searchLoaction, serachCategory, JobData]);
+  }, [filterJobs, searchLoaction, serachCategory]);
 
   useEffect(() => {
     const query = new URLSearchParams(location.search).get("q") || "";

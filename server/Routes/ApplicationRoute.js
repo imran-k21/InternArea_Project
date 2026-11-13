@@ -1,159 +1,145 @@
-// const express=require("express");
-// const router=express.Router();
-// const application=require("../Model/Application");
+const express = require("express");
+const mongoose = require("mongoose");
+const router = express.Router();
 
-// router.post("/",async(req,res)=>{
-//       const applicationData=new application({
-//            coverLetter:req.body.coverLetter,
-//            user:req.body.user,
-//            company:req.body.company,
-//            category:req.body.category,
-//            body:req.body.body,
-//            ApplicationId:req.body.ApplicationId,
-//       })
-//       await applicationData.save().then((data)=>{
-//             res.send(data)
-//       }).catch((error)=>{
-//             console.log(error,"not able to post the data")
-//       })
-// })
-// router.get("/",async(req,res)=>{
-//       try{
-//             const data=await application.find();
-//             res.json(data).status(200);
-//       }catch(error){
-//             console.log(error);
-//             res.status(404).json({error:"Internal server error"})
-//       }
-// })
-// router.get("/:id",async(req,res)=>{
-//       const {id}=req.params
-//       try{
-//             const data=await application.findById(id);
-//             if (!data) {
-//                   res.status(404).json({error:"Application is not found "})
-//             }
-//             res.json(data).status(200);
-//       }catch(error){
-//             console.log(error);
-//             res.status(404).json({error:"Internal server error"})
-//       }
-// })
-// router.put("/:id",async(req,res)=>{
-//       const {id}=req.params;
-//       const {action}=req.body
-//       if(action==="accepted"){
-//             status="accepted"
-//       }
-//       else if(action==="rejected"){
-//             status="rejected"
-//       }
-//       else{
-//             res.status(404).json({error:"Internal server error"})
-//       }
-//       try {
-//             const updateApplication = await application.findByIdAndUpdate(
-//                 id,
-//                 { $set: { status } },
-//                 { new: true }
-//             );
-    
-//             if (!updateApplication) {
-//                 res.status(404).json({ error: "Not able to update the application" });
-//                 return; 
-//             }
-    
-//             res.status(200).json({ success: true, data: updateApplication });
-//         } catch (error) {
-//             console.log(error);
-//             res.status(500).json({ error: "Internal server error" });
-//         }
-// })
-// module.exports=router
+const Application = require("../Model/Application");
+const Job = require("../Model/Jobs");
+const Internship = require("../Model/Internship");
+const { requireUser, requireAdmin, verifyFirebaseToken, verifyAdminToken } = require("../Middleware/auth");
 
+router.post("/", requireUser, async (req, res) => {
+  try {
+    const { coverLetter, listingId, listingType } = req.body || {};
+    const cleanCoverLetter = typeof coverLetter === "string" ? coverLetter.trim() : "";
 
-
-
-
-
-
-
-
-const express =require("express")
-const router= express.Router();
-const application=require("../Model/Application");
-
-
-router.post("/",async (req,res)=>{
-    const applicationData=new application({
-        coverLetter:req.body.coverLetter,
-        user:req.body.user,
-        company:req.body.company,
-        category:req.body.category,
-        body:req.body.body,
-        ApplicationId:req.body.ApplicationId
-    })
-    await applicationData.save().then((data)=>{
-        res.send(data)
-    }).catch((error)=>{
-        console.log(error,"not able to post the data")
-    })
-})
-router.get("/", async (req,res)=>{
-    try {
-        const data=await application.find();
-        res.json(data) .status(200)
-    } catch (error) {
-        console.log(err);
-        res.status(404).json({error:"Internal server error "})
+    if (!cleanCoverLetter) {
+      return res.status(400).json({ error: "A cover letter is required" });
     }
-})
-router.get("/:id", async (req,res)=>{
-    const {id}=req.params;
-    try {
-        const data=await application.findById(id);
-        if (!data) {
-
-             res.status(404).json({error:"Application is not found "})
-        }
-        res.json(data) .status(200)
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({error:"Internal server error "})
-    }
-})
-
-router.put("/:id", async (req, res) => {
-    const { id } = req.params;
-    const { action } = req.body;
-
-    let status;
-
-    if (action === "accepted") {
-        status = "accepted";
-    } else if (action === "rejected") {
-        status = "rejected";
-    } else {
-        res.status(400).json({ error: "Invalid action" });
-        return; 
+    if (!mongoose.Types.ObjectId.isValid(listingId)) {
+      return res.status(400).json({ error: "A valid job or internship ID is required" });
     }
 
-    try {
-        const updateApplication = await application.findByIdAndUpdate(
-            id,
-            { $set: { status } },
-            { new: true }
-        );
-
-        if (!updateApplication) {
-            res.status(404).json({ error: "Not able to update the application" });
-            return; 
-        }
-
-        res.status(200).json({ success: true, data: updateApplication });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: "Internal server error" });
+    const normalizedType = String(listingType || "").toLowerCase();
+    const isJob = normalizedType === "job";
+    const isInternship = normalizedType === "internship";
+    if (!isJob && !isInternship) {
+      return res.status(400).json({ error: "Listing type must be job or internship" });
     }
+
+    const ListingModel = isJob ? Job : Internship;
+    const listing = await ListingModel.findById(listingId).lean();
+    if (!listing) return res.status(404).json({ error: "The selected listing was not found" });
+
+    const existing = await Application.findOne({
+      userId: req.user.uid,
+      listingId: listing._id,
+    });
+    if (existing) {
+      return res.status(409).json({ error: "You have already applied to this listing" });
+    }
+
+    const user = {
+      uid: req.user.uid,
+      name: req.user.name || req.user.email || "InternArea User",
+      email: req.user.email || "",
+      photo: req.user.picture || "",
+      phoneNumber: req.user.phoneNumber || "",
+    };
+
+    const savedApplication = await Application.create({
+      coverLetter: cleanCoverLetter,
+      company: listing.company,
+      category: listing.category || "",
+      Application: listing._id,
+      listingId: listing._id,
+      listingModel: isJob ? "Job" : "Internship",
+      userId: req.user.uid,
+      user,
+    });
+
+    return res.status(201).json(savedApplication);
+  } catch (error) {
+    console.error("Unable to submit application:", error);
+    return res.status(500).json({ error: "Unable to submit application" });
+  }
 });
-module.exports=router
+
+router.get("/mine", requireUser, async (req, res) => {
+  try {
+    const applications = await Application.find({
+      $or: [{ userId: req.user.uid }, { "user.uid": req.user.uid }],
+    }).sort({ createAt: -1 });
+    return res.status(200).json(applications);
+  } catch (error) {
+    console.error("Unable to load user applications:", error);
+    return res.status(500).json({ error: "Unable to load applications" });
+  }
+});
+
+router.get("/", requireAdmin, async (req, res) => {
+  try {
+    const applications = await Application.find().sort({ createAt: -1 });
+    return res.status(200).json(applications);
+  } catch (error) {
+    console.error("Unable to load applications:", error);
+    return res.status(500).json({ error: "Unable to load applications" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    const isAdmin = verifyAdminToken(token);
+    let uid = null;
+
+    if (!isAdmin) {
+      const user = await verifyFirebaseToken(token);
+      uid = user.uid;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid application ID" });
+    }
+
+    const application = await Application.findById(req.params.id);
+    if (!application) return res.status(404).json({ error: "Application not found" });
+
+    const ownerUid = application.userId || application.user?.uid;
+    if (!isAdmin && ownerUid !== uid) {
+      return res.status(403).json({ error: "You cannot view this application" });
+    }
+
+    return res.status(200).json(application);
+  } catch (error) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+});
+
+router.put("/:id", requireAdmin, async (req, res) => {
+  const { action } = req.body || {};
+  if (!["accepted", "rejected"].includes(action)) {
+    return res.status(400).json({ error: "Action must be accepted or rejected" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ error: "Invalid application ID" });
+  }
+
+  try {
+    const updatedApplication = await Application.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status: action } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+    return res.status(200).json({ success: true, data: updatedApplication });
+  } catch (error) {
+    console.error("Unable to update application:", error);
+    return res.status(500).json({ error: "Unable to update application" });
+  }
+});
+
+module.exports = router;

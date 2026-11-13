@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../api';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 
@@ -8,7 +8,8 @@ function PostJOb() {
     const [location, setLocation] = useState('');
     const [category, setCategory] = useState('');
     const [aboutCompany, setAboutCompany] = useState('');
-    const [aboutInternship, setAboutInternship] = useState('');
+    const [aboutJob, setAboutJob] = useState('');
+    const [experience, setExperience] = useState('');
     const [whoCanApply, setWhoCanApply] = useState('');
     const [perks, setPerks] = useState('');
     const [numberOfOpening, setNumberOfOpening] = useState('');
@@ -24,7 +25,8 @@ function PostJOb() {
         location,
         category,
         aboutCompany,
-        aboutInternship,
+        aboutJob,
+        experience,
         whoCanApply,
         perks,
         numberOfOpening,
@@ -44,7 +46,8 @@ function PostJOb() {
           location:location,
           category:category,
           aboutCompany:aboutCompany,
-          aboutInternship:aboutInternship,
+          aboutJob:aboutJob,
+          Experience:experience,
           Whocanapply:whoCanApply,
           perks:perks,
           numberOfopning:numberOfOpening,
@@ -55,7 +58,7 @@ function PostJOb() {
       }
 
       try {
-        const res = await axios.post("/api/job",bodyJosn)
+        const res = await api.post("/api/job",bodyJosn)
         console.log(res.data)
         alert("Job posted successfully")
         navigate("/adminpanel")
@@ -93,6 +96,10 @@ function PostJOb() {
         <label for="category" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">category*</label>
         <input name="category" value={category} onChange={(e)=>setCategory(e.target.value)} class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
       </div>
+      <div class="sm:col-span-2">
+        <label for="experience" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">Experience*</label>
+        <input id="experience" name="experience" value={experience} onChange={(e)=>setExperience(e.target.value)} class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+      </div>
 
       <div class="sm:col-span-2">
         <label for="aboutCompany" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">aboutCompany*</label>
@@ -100,8 +107,8 @@ function PostJOb() {
       </div>
 
       <div class="sm:col-span-2">
-        <label for="aboutInternship" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">aboutInternship*</label>
-        <textarea name="aboutInternship" value={aboutInternship} onChange={(e)=>setAboutInternship(e.target.value)} class="h-64 w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"></textarea>
+        <label for="aboutJob" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">aboutJob*</label>
+        <textarea name="aboutJob" value={aboutJob} onChange={(e)=>setAboutJob(e.target.value)} class="h-64 w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"></textarea>
       </div>
       <div class="sm:col-span-2">
         <label for="Whocanapply" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">Whocanapply*</label>

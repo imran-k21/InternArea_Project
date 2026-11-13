@@ -1,29 +1,38 @@
-import axios from 'axios';
+import api from '../api';
 import React, { useEffect, useState } from 'react'
 import "./detailApplication.css";
 
 function DeatilApplication() {
   const [data,setData] =useState(null)
+  const [error,setError] = useState("")
   let search=window.location.search;
   const params=new URLSearchParams(search);
 const id=params.get("a")
 useEffect(()=>{
-   const fetchData= async()=>{
-  const response=await axios.get(`/api/application/${id}`)
-
-  setData(response.data)
-   }
-   fetchData()
+   let active = true;
+   const fetchData = async () => {
+     try {
+       const response = await api.get(`/api/application/${id}`);
+       if (active) setData(response.data);
+     } catch (requestError) {
+       if (active) setError(requestError.response?.data?.error || "Unable to load this application.");
+     }
+   };
+   fetchData();
+   return () => { active = false; };
 },[id])
 const handleAcceptAndReject= async(id,action)=>{
   try {
-    const response=await axios.put(`/api/application/${id}`,{action})
+    const response=await api.put(`/api/application/${id}`,{action})
     setData(response.data.data)
 
   } catch (error) {
     console.log(error)
   }
 
+}
+if (error) {
+  return <div className="application-detail-page"><div className="application-detail-card"><p role="alert">{error}</p></div></div>;
 }
 if (!data) {
   return (

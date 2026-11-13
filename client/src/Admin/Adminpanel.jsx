@@ -1,13 +1,19 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { RiSendPlaneFill } from "react-icons/ri";
 import { BsMailbox2Flag } from "react-icons/bs";
 function Adminpanel() {
+  const navigate = useNavigate();
+  const logoutAdmin = () => {
+    window.sessionStorage.removeItem('internarea_admin_token');
+    navigate('/adminLogin', { replace: true });
+  };
   return (
     <div className="admin-panel-wrap">
       <div className="admin-panel-card">
         <h1>Admin Dashboard</h1>
         <p>Manage listings and applications from one place.</p>
+        <button type="button" onClick={logoutAdmin} className="application-action-btn reject">Admin Logout</button>
 
         <div className="admin-panel-grid">
           <Link to={"/applications"} className="admin-panel-item">

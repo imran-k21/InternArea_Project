@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import logo from "../../Assets/logo.png";
 import Sidebar from "./Sidebar";
 import "./navbar.css";
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "firebase/auth";
 import { auth, provider } from "../../firebase/firebase";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,8 @@ function Navbar() {
   const [isStudent, setStudent] = useState(true);
   const [isDivVisibleForProfile,setDivVisibleForProfile]=useState(false)
   const [searchQuery, setSearchQuery] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [profileImageError, setProfileImageError] = useState(false);
 
   const loginFunction = () => {
@@ -40,6 +42,33 @@ function Navbar() {
         setDivVisibleForlogin(false)
       });
   };
+  const resetLoginPassword = async () => {
+    if (!loginEmail.trim()) {
+      alert("Enter your email address first.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, loginEmail.trim());
+      alert("Password reset email sent.");
+    } catch (error) {
+      alert(error.message || "Unable to send password reset email");
+    }
+  };
+
+  const loginWithEmail = async () => {
+    if (!loginEmail.trim() || !loginPassword) {
+      alert("Enter your email and password.");
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword);
+      setDivVisibleForlogin(false);
+      setLoginPassword("");
+    } catch (error) {
+      alert(error.message || "Unable to log in");
+    }
+  };
+
   const showLogin = () => {
     setDivVisibleForlogin(true);
   };
@@ -72,10 +101,15 @@ function Navbar() {
   useEffect(() => {
     setProfileImageError(false);
   }, [user?.photo]);
-  const logoutFunction=()=>{
-    signOut(auth);
-    navigate("/");
-  }
+  const logoutFunction = async () => {
+    try {
+      await signOut(auth);
+      window.sessionStorage.removeItem("internarea_admin_token");
+      navigate("/");
+    } catch (error) {
+      console.error("Unable to sign out:", error);
+    }
+  };
 
   const handleGlobalSearch = () => {
     const value = searchQuery.trim();
@@ -248,8 +282,7 @@ Hire Talent
                         </label>
                         <input
                           class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          type="email"
-                          placeholder="john@example.com"
+                          type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="john@example.com"
                         />
                       </div>
                       <div class="mt-4">
@@ -257,18 +290,17 @@ Hire Talent
                           <label class="block text-gray-700 text-sm font-bold mb-2">
                             Password
                           </label>
-                          <a href="/" class="text-xs text-blue-500">
+                          <button type="button" onClick={resetLoginPassword} className="text-xs text-blue-500">
                             Forget Password?
-                          </a>
+                          </button>
                         </div>
                         <input
                           class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          placeholder="Must be atleast 6 characters"
-                          type="password"
+                          placeholder="Must be at least 6 characters" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                         />
                       </div>
                       <div className="mt-8">
-                        <button className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600">
+                        <button type="button" onClick={loginWithEmail} className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600">
                           Login
                         </button>
                       </div>
@@ -305,8 +337,7 @@ Hire Talent
                       </label>
                       <input
                         class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                        type="email"
-                        placeholder="john@example.com"
+                        type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="john@example.com"
                       />
                     </div>
                     <div class="mt-4">
@@ -314,18 +345,17 @@ Hire Talent
                         <label class="block text-gray-700 text-sm font-bold mb-2">
                           Password
                         </label>
-                        <a href="/" class="text-xs text-blue-500">
+                        <button type="button" onClick={resetLoginPassword} className="text-xs text-blue-500">
                           Forget Password?
-                        </a>
+                        </button>
                       </div>
                       <input
                         class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                        placeholder="Must be atleast 6 characters"
-                        type="password"
+                        placeholder="Must be at least 6 characters" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                       />
                     </div>
                     <div className="mt-8">
-                      <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
+                      <button type="button" onClick={loginWithEmail} className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600">
                         Login
                       </button>
                     </div>

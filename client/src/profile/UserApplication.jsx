@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
+import api from '../api';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../Feature/Userslice';
@@ -8,19 +8,21 @@ import "./user.css"
 function UserApplication() {
   const user=useSelector(selectUser)
   const [application,setApplication]=useState([]);
-  const userapplication=application.filter(app=>app.user?.name===user.name)
-  useEffect(()=>{
-    const fetchApplication=async()=>{
-      try{
-        const response=await axios.get("/api/application")
-        setApplication(response.data)
+  const userapplication=application
+  useEffect(() => {
+    if (!user?.uid) return;
+    let active = true;
+    const fetchApplication = async () => {
+      try {
+        const response = await api.get("/api/application/mine");
+        if (active) setApplication(response.data);
+      } catch (error) {
+        if (active) alert(error.response?.data?.error || "Unable to load your applications");
       }
-      catch(error){
-        alert(error)
-      }
-    }
-    fetchApplication()
-  },[])
+    };
+    fetchApplication();
+    return () => { active = false; };
+  }, [user?.uid]);
   return (
     <div>
     <div className='hide'>
@@ -44,17 +46,17 @@ function UserApplication() {
 <tbody>
     {
         userapplication.map((data)=>(
-            <>
+            <React.Fragment key={data._id}>
     
             <tr className='border-b'>
             <td className='whitespace-nowrap px-6 py-4'>{data.company}</td>
             <td className='whitespace-nowrap px-6 py-4'>{data.category}</td>
             <td className='whitespace-nowrap px-6 py-4'>{new Date(data?.createAt).toLocaleDateString()}</td>
-            <td className='whitespace-nowrap px-6 py-4'>{data.user.name}</td>
+            <td className='whitespace-nowrap px-6 py-4'>{data.user?.name || "User"}</td>
             <td className='whitespace-nowrap px-6 py-4'><Link to={`/userapplicationDetail?a=${data._id}`}><i class="bi bi-envelope-open text-blue-500"></i></Link></td>
             <td className='whitespace-nowrap px-6 py-4'>{data.status}</td>
             </tr>
-            </>
+            </React.Fragment>
         ))
     }
 </tbody>
@@ -80,7 +82,7 @@ function UserApplication() {
            </div>
            <div class="flex-grow">
              <h2 class="text-gray-900 text-lg title-font font-medium mb-3"> company name {data.company}</h2>
-             <p class="leading-relaxed text-base"> Applied by  {data.user.name}</p>
+             <p class="leading-relaxed text-base"> Applied by  {data.user?.name || "User"}</p>
              <p class="leading-relaxed text-base"> Applied on  {new Date(data?.createAt).toLocaleDateString()}</p>
              <p class="leading-relaxed text-base"> Application status  {data.status}</p>
              <Link to={`/userapplicationDetail?a=${data._id}`} class="mt-3 text-indigo-500 inline-flex items-center">View in detail

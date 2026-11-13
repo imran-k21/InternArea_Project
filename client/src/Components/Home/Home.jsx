@@ -7,16 +7,15 @@ import { Link } from "react-router-dom";
 // import InternShipData from "../Data/InternshipDatAvl";
 import "./home.css";
 import Job from "./Job";
-import axios from "axios";
+import api from '../../api';
 function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("Big Brands");
 
   const [internshipData,setInternshipData]=useState([])
   useEffect(()=>{
     const fetchData=async()=>{
       try{
-        const response=await axios.get(`/api/internship`)
+        const response=await api.get(`/api/internship`)
         setInternshipData(response.data)
       }catch(error){
         console.log(error)
@@ -32,21 +31,11 @@ function Home() {
   const handleSlide = (direction) => {
     const contianer = document.getElementById("container");
     const step = 100;
-    if (direction === "left") {
-      setCurrentSlide((preveSlibe) => (preveSlibe > 0 ? preveSlibe - 1 : 0));
-    } else {
-      setCurrentSlide((preveSlibe) => (preveSlibe < 3 ? preveSlibe + 1 : 3));
-    }
     sideScroll(contianer, direction, 25, step, 10);
   };
   const handleSlideIntern = (direction) => {
     const contianer = document.getElementById("container2");
     const step = 100;
-    if (direction === "left") {
-      setCurrentSlide((preveSlibe) => (preveSlibe > 0 ? preveSlibe - 1 : 0));
-    } else {
-      setCurrentSlide((preveSlibe) => (preveSlibe < 3 ? preveSlibe + 1 : 3));
-    }
     sideScrollIntern(contianer, direction, 25, step, 10);
   };
 
