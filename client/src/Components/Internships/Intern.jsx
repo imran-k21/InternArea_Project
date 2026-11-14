@@ -84,7 +84,7 @@ fetchData();
     <>
     <div className='flex internship-filter'>
 <div className="first-int mb-14">
-  <div className="filter-section w-1/6">
+  <div className="filter-section">
 <p id='filter-ico' className=' text-center' ><i onClick={showDiv} class="bi bi-funnel  text-blue-400"></i> Filter</p>
 <div className='fill flex flex-col ml-2'>
 <label htmlFor="pro">Profile</label>
@@ -182,7 +182,7 @@ fetchData();
   isDivVisible &&(
     <>
     <div className="first2-int mb-14">
-  <div className="filter-section w-1/6">
+  <div className="filter-section">
       <button id='close-btn' onClick={hidediv}><i class=" text-3xl bi bi-x"></i></button>
 <p className='text-center'><i class="bi bi-funnel  text-blue-400"></i> Filter</p>
 <div className='fill flex flex-col ml-2'>

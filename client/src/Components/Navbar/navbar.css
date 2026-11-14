@@ -1,4 +1,12 @@
-nav {
+.nav1,
+.nav1 * {
+  box-sizing: border-box;
+}
+
+.nav1 > ul {
+  width: 100%;
+}
+.nav1 {
   position: fixed;
   top: 0;
   left: 0;
@@ -15,7 +23,7 @@ nav {
   height: calc(74px + 1.1rem);
 }
 
-ul {
+.nav1 > ul {
   margin: 0 auto;
   padding: 0.55rem 1.2rem;
   min-height: 74px;
@@ -26,7 +34,7 @@ ul {
   list-style: none;
 }
 
-.img img {
+.nav1 .img img {
   width: 154px;
   object-fit: contain;
 }
